@@ -1,4 +1,4 @@
-Programs of dashSVD Algorithm with Shifted Power Iteration for Sparse Data
+dashSVD: A Faster Randomized SVD Algorithm with Dynamic Shifts for Sparse Data
 ---
 ### 1.Main Algorithms
 
