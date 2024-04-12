@@ -1,5 +1,6 @@
 dashSVD: A Faster Randomized SVD Algorithm with Dynamic Shifts for Sparse Data
 ---
+Paper: Xu Feng, Wenjian Yu, Yuyang Xie, and Jie Tang, “Algorithm xxx: Faster randomized SVD with dynamic shifts,” ACM Transactions on Mathematical Software, 2024.
 ### 1.Main Algorithms
 
 1.matlab/example/basic_rSVD_shift.m ---- basic randomized SVD algorithm with shifted power iteration and shift updating scheme (Alg. 2 without accelerating skills).
