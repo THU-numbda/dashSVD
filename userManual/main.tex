@@ -8,9 +8,7 @@
 % Packages used in this example
 \usepackage{graphicx}  % for including images
 \usepackage{microtype} % for typographical enhancements
-\usepackage{minted}    % for code listings
 \usepackage{amsmath}   % for equations and mathematics
-\setminted{style=friendly,fontsize=\small}
 \usepackage{hyperref}  % for hyperlinks
 \usepackage[a4paper,top=4.2cm,bottom=4.2cm,left=3.5cm,right=3.5cm]{geometry} % for setting page size and margins
 \usepackage{listings}
@@ -33,7 +31,7 @@
 \newcommand{\cs}[1]{\texttt{\textbackslash #1}}
 \newcommand{\atn}[1]{\textcolor{black}{#1}}
 \newcommand{\atnn}[1]{\textcolor{black}{#1}}
-\newcommand{\notice}[1]{\textcolor{blue}{#1}}
+\newcommand{\notice}[1]{\textcolor{black}{#1}}
 
 
 \newcommand{\cmtt}{\fontfamily{cmtt}\selectfont}
@@ -41,7 +39,7 @@
 % Frontmatter data; appears on title page
 \title{User Manual for dashSVD: A Faster Randomized SVD Algorithm with Dynamic Shifts for Sparse Data}
 \author{Xu Feng, Wenjian Yu}
-\date{March, 2024}
+\date{April, 2024}
 
 \begin{document}
 
@@ -51,12 +49,12 @@
 \newpage
 
 \section{Introduction}
-This is the user manual of the programs of dashSVD algorithm with shifted power iteration for sparse data. The programs are implemented both in Matlab and in C. The details of algorithm are included in the relevant paper.
+This is the user manual of the code package of the dashSVD algorithm with shifted power iteration for sparse data. The programs are implemented both in Matlab and in C. The details of algorithm are included in the relevant paper \cite{dashSVD}.
 
 \section{Efficient Implementation of dashSVD}
 In this section, we first briefly introduce \atnn{the Math Kernel Library (MKL)}~\cite{Intel}, which is an efficient library for matrix computations.
 %the computation of the matrix. 
-Then, we present the details of dashSVD (Alg. 5) \atnn{program written in C based on MKL}. Finally, we provide the \atnn{program interface in} both C and Matlab.
+Then, we present the details of dashSVD (Alg. 5 in \cite{dashSVD}) \atnn{program written in C based on MKL}. Finally, we provide the \atnn{program interface in} both C and Matlab.
 
 \subsection{Overview of MKL}
 
@@ -70,10 +68,10 @@ Firstly, we reduce the peak memory usage by \atnn{allocating} the space of matri
 %at the beginning of dashSVD 
 and freeing the space of matrices immediately when they are \atnn{not needed}. Secondly, the following treatments are applied \atn{to implement dashSVD with better parallelization.}
 \begin{itemize}
-	\item We use \atnn{the high-performance parallel implementations of matrix operations} in MKL as much as possible. Therefore, the matrix-matrix, matrix-vector and vector-vector operations are naturally parallelized. We use the following functions of MKL/LAPACK/BLAS to do the main computations in Alg.~5.%, which is also shown in the workflow of Alg.~5 in \atn{XXX}.
+	\item We use \atnn{the high-performance parallel implementations of matrix operations} in MKL as much as possible. Therefore, the matrix-matrix, matrix-vector and vector-vector operations are naturally parallelized. We use the following functions of MKL/LAPACK/BLAS to do the main computations in Alg.~5 in \cite{dashSVD}.%, which is also shown in the workflow of Alg.~5 in \atn{XXX}.
 	\begin{itemize}
-		\item \atn{\texttt{mkl\_sparse\_d\_mm} : Compute the multiplication of a sparse matrix stored in \atnn{compressed sparse row (CSR)} format with a dense matrix, which is mainly used in Step~2, 4 and 9 in Alg.~5.}  
-		\item \texttt{cblas\_dgemm} : Compute the matrix-matrix multiplication of two dense matrices, which is mainly used in ``eigSVD'' \atnn{(Alg. 3) invoked} in Step 2, 4 and 10 \atnn{of Alg. 5}, and the computation of $\mathbf{V}$ in Step 11 \atnn{of Alg. 5}.
+		\item \atn{\texttt{mkl\_sparse\_d\_mm} : Compute the multiplication of a sparse matrix stored in \atnn{compressed sparse row (CSR)} format with a dense matrix, which is mainly used in Step~2, 4 and 9 in Alg.~5 in \cite{dashSVD}.}  
+		\item \texttt{cblas\_dgemm} : Compute the matrix-matrix multiplication of two dense matrices, which is mainly used in ``eigSVD'' \atnn{(Alg. 3 in \cite{dashSVD}) invoked} in Step 2, 4 and 10 \atnn{of Alg. 5 in \cite{dashSVD}}, and the computation of $\mathbf{V}$ in Step 11 \atnn{of Alg. 5 in \cite{dashSVD}}.
 		\item \texttt{LAPACKE\_dsyevd} : Compute the EVD of a dense matrix, which is used in  \atnn{``eigSVD''}.
 	\end{itemize}
 	\item We parallelize the copy operations of matrix and vectors with OpenMP following the implementation in \cite{martinsson2016randomized2} \cite{randqb-code}. Therefore, all copy operations in dashSVD are well parallelized with less runtime.
@@ -103,18 +101,18 @@ After specifying the input sparse matrix stored in CSR format, we can call the \
 \indent\indent{\cmtt dashSVD(A, U, S, V, k)}\\
 \indent\indent{\cmtt dashSVD\_opt(A, U, S, V, k, p, s, tol)}\\
 %{\cmtt dashSVD} is the interface of Alg.~4 while {\cmtt dashSVD\_pve} is the interface of Alg.~5. 
-\atnn{Here,} {\cmtt A} is the input matrix \atnn{in} structure {\cmtt mat\_csr}. {\cmtt U}, {\cmtt S} and {\cmtt V} are the matrices \atnn{in} structure {\cmtt mat}\atnn{. Their dimensions are {\cmtt A.nrows} $\times$ {\cmtt k}, {\cmtt k} $\times$ 1 and {\cmtt A.ncols} $\times$ {\cmtt k}, respectively.} {\cmtt k} is the target rank of truncated SVD. \atnn{Function {\cmtt dashSVD\_opt} provides an option for user to specify some parameters, where the arguments} {\cmtt p}, {\cmtt s} and {\cmtt tol} are $p_{max}$, $s$ and tol in Alg.~5 \atnn{respectively}. \atnn{For function} {\cmtt dashSVD}, the \atnn{values of} {\cmtt p}, {\cmtt s} and {\cmtt tol} are \atnn{fixed, i.e.} 1000, {\cmtt k}/2 and $10^{-2}$\atnn{, respectively}. 
+\atnn{Here,} {\cmtt A} is the input matrix \atnn{in} structure {\cmtt mat\_csr}. {\cmtt U}, {\cmtt S} and {\cmtt V} are the matrices \atnn{in} structure {\cmtt mat}\atnn{. Their dimensions are {\cmtt A.nrows} $\times$ {\cmtt k}, {\cmtt k} $\times$ 1 and {\cmtt A.ncols} $\times$ {\cmtt k}, respectively.} {\cmtt k} is the target rank of truncated SVD. \atnn{Function {\cmtt dashSVD\_opt} provides an option for user to specify some parameters, where the arguments} {\cmtt p}, {\cmtt s} and {\cmtt tol} are $p_{max}$, $s$ and tol in Alg.~5 in \cite{dashSVD} \atnn{respectively}. \atnn{For function} {\cmtt dashSVD}, the \atnn{values of} {\cmtt p}, {\cmtt s} and {\cmtt tol} are \atnn{fixed, i.e.} 1000, {\cmtt k}/2 and $10^{-2}$\atnn{, respectively}. 
 
 \atnn{We} also provide the interface of dashSVD in Matlab:
 
 \indent\indent{\cmtt [U, S, V] = dashSVD(A, k, p, s, tol)}\\
 \atnn{Here, the arguments} {\cmtt p}, {\cmtt s} and {\cmtt tol} can be \atnn{blank. In that case, the default values  1000, {\cmtt k}/2 and $10^{-2}$ are used}.
 
-\section{Source Files for the Main algorithms and Drivers}
+\section{Source Files for the Main Algorithms and Drivers}
 \subsection{Main Algorithms}
 \begin{itemize}
 
-\item \texttt{Src/matlab/exxamples/basic\_rSVD\_shift.m}: basic randomized SVD algorithm with shifted power iteration and shift updating scheme (Alg. 2 without accelerating skills).
+\item \texttt{Src/matlab/examples/basic\_rSVD\_shift.m}: basic randomized SVD algorithm with shifted power iteration and shift updating scheme (Alg. 2 in \cite{dashSVD} without accelerating skills).
 
 \item \texttt{Src/matlab/src/dashSVD.m}: dashSVD with shifted power iteration for sparse data in Matlab (dashSVD with accelerating skills).
 
@@ -123,28 +121,55 @@ After specifying the input sparse matrix stored in CSR format, we can call the \
 
 \subsection{Drivers in Matlab}
 \begin{itemize}
-\item \texttt{Src/matlab/example/ShiftedPowerIteration\_Test.m}: used to test the effectiveness of shifted power iteration. The comparison is between Alg. 1 (\texttt{basic\_rSVD.m})~\cite{Halko2011Finding}, Alg. 2* (\texttt{basic\_rSVD\\\_shift\_noupdate.m}) and Alg. 2 (\texttt{basic\_rSVD\_shift.m}) on Dense1 or Dense2.
+\item \texttt{Src/matlab/example/ShiftedPowerIteration\_Test.m}: used to test the effectiveness of shifted power iteration. The comparison is between Alg. 1 (\texttt{basic\_rSVD.m})~\cite{Halko2011Finding}, Alg. 2* (\texttt{basic\_rSVD\\\_shift\_noupdate.m}) and Alg. 2 (\texttt{basic\_rSVD\_shift.m}) on Dense1 or Dense2.  \notice{This driver produces Fig.1 (Dense1 and Dense2) in \cite{dashSVD}.}
+
 \item \texttt{Src/matlab/example/dashSVD\_Test.m}: used to test the effectiveness of dashSVD compared with LanczosBD in \texttt{svds} in Matlab on SNAP. (Notice that \texttt{svdstest.m} and \texttt{LanczosBDtest.m} is the modification of \texttt{svds} to make sure LanczosBD can produce results with settled times of restarting.)
+ \notice{This driver produces Fig.2 (SNAP) in \cite{dashSVD}.}
+ 
 \item \texttt{Src/matlab/example/AccuracyControl\_Test.m}: used to validate the PVE criterion of accuracy control used in dashSVD.
 \end{itemize}
 
 \subsection{Drivers in C}
 
-The program for testing dashSVD with MKL is in "\texttt{Src/mkl/example}". The MKL library needs the support of oneAPI in Intel~\cite{Intel}. When the libraries MKL and OpenMP have been installed, firstly modified the path of MKL in the makefile("\texttt{Src/mkl/examples/makefile}"), and secondly use "make" 
+The program for testing dashSVD with MKL is in "\texttt{Src/mkl/example}". The MKL library needs the support of oneAPI in Intel~\cite{Intel}. When all the libraries
+\begin{itemize}
+\item MKL in OneAPI (provides BLAS and LAPACK linear algebra routines), recommended version 2021.2.0
+\item OpenMP, recommended version 4.5
+\end{itemize}
+have been prepared, firstly modify the path of MKL in the makefile ("\texttt{Src/mkl/\\examples/makefile}"), and secondly use "make" 
 \begin{lstlisting} 
 >> make
 \end{lstlisting}
-to produce the executable program "dashsvdtest". Developers can use
+to produce the executable program "dashsvdtest". 
+
+Users can then use
 \begin{lstlisting} 
 >> OMP_NUM_THREADS=8 OMP_PROC_BIND=close OMP_PLACES=cores ./dashsvdtest
 \end{lstlisting}
-to run the driver with one NUMA domain for comparison in one socket with 8 threads. The result of program is an example of testing the dataset SNAP~\cite{snapnets} on dashSVD with and without accuracy control.
+to run the driver with one NUMA domain for comparison in one socket with 8 threads. The result of program is an example of testing the dataset SNAP~\cite{snapnets} on dashSVD with and without accuracy control. \notice{This driver produces the results of SNAP in Table 5 of Alg. 5 in \cite{dashSVD}}.
+
+\section{Test Cases in the Package}
+
+\begin{itemize}
+\item \textbf{Dense1}: a dense matrix generated by "\texttt{randn()}" in Matlab, included in "\texttt{Src/matlab/examples/Dense1.mat}"
+\item \textbf{Dense2}: a dense matrix with the $i$-th singular value following $\sigma_i = 1/\sqrt{i}$, included in "\texttt{Src/matlab/examples/Dense2.mat}"
+\item \textbf{SNAP (soc-Slashdot0922)}: a social network sparse matrix from SNAP~\cite{snapnets}, included in "\texttt{Src/matlab/examples/SNAP.mat}" and "\texttt{Src/mkl/examp\\les/SNAP.dat}"
+
+%\item \textbf{MovieLens}: a sparse matrix from MovieLens dataset~\cite{movielens}, not included.
+%\item \textbf{AMiner}: a person-keyword sparse matrix from the information retrieval application “AMiner”~\cite{Aminer}, not included.
+%\item \textbf{Rucci1}: a sparse matrix with singular values decaying very slowly obtained from SuiteSparse matrix collection~\cite{davis2011university}, not included.
+%\item \textbf{uk-2005}: a sparse matrix from larger web graphs~\cite{BRSLLP,BoVWFI} obtained from SuiteSparse matrix collection, not included. 
+%\item \textbf{sk-2005}: a sparse matrix from larger web graphs~\cite{BRSLLP,BoVWFI} obtained from SuiteSparse matrix collection, not included.
+\end{itemize}
+
+With them, Fig. 1, Fig. 2 and the results of SNAP in Table 5 in \cite{dashSVD} were produced. For more test cases, please refer to \cite{dashSVD}. 
+
 \section{Additional Notes}
 \begin{itemize}
 \item Because the source codes in C rely on not only the general functions in BLAS and LAPACK but also the function {
 \cmtt mkl\_sparse\_d\_mm
 } to compute the multiplication of a sparse matrix stored in CSR format with a dense matrix only in MKL, they are not able to be complied directly with other versions of BLAS and LAPACK.
-\item When compiled on MacOS, one should download the older version of oneAPI to install MKL, because from oneAPI version 2024 on macOS is not supported. Besides,  OpenMP should be prepare when the compile clang dose not support OpenMP. Then, use clang instead of gcc as the compiler to compile the source codes with correct path of links. 
+\item When compiled on MacOS, one should download the older version of oneAPI to install MKL, because from oneAPI version 2024 on macOS is not supported. Besides,  OpenMP should be prepare when the compile clang dose not support OpenMP. Then, use clang instead of gcc as the compiler to compile the source codes with correct path of libraries. 
 \end{itemize}
 
 

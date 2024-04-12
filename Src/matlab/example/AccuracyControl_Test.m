@@ -25,7 +25,7 @@ Sigma_dashSVD = max(abs(flipud(S2)-Acc_S(1:k))./Acc_S(1:k));
 semilogy(1:k, diag(S), '+-', 1:k, flipud(S2), 'x-');
 axis([0, 101, 0.9*S(100, 100), 1.1*S(1,1)]);
 ylabel('\sigma_i');
-legend('svds', 'RushSVD');
+legend('svds', 'dashSVD');
 figure_FontSize=25; 
 set(findobj('FontSize',10),'FontSize',25); 
 set( get(gca,'XLabel'),'FontSize',figure_FontSize); 
