@@ -11,7 +11,11 @@ else
     [V, D] = eigs(B, k);
     l = k;
 end
-d= sqrt(diag(D)); 
+d= diag(D);
+if d(1)<=0
+    disp('Warning: get nonpositive eigenvalues in eigSVD');
+end
+d= sqrt(d); 
 e= 1./d;
 S= spdiags(e, 0, l, l);   
 U= (S*V')*A';
