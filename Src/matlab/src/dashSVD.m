@@ -4,7 +4,7 @@ if nargin < 5
     tol = 1e-2;
 end
 if nargin < 4
-    s = k/2;
+    s = round(k/2);
 end
 if nargin < 3
     p = 1000;
